@@ -28,7 +28,8 @@ Pensada para máquinas donde no puedes instalar nada: **ni Windows Terminal, ni 
 - ✅ Terminales reales de **CMD** y **PowerShell** en pestañas
 - ✅ **Renombra** cada pestaña con doble click o `F2` ("Servidor", "Git", "Logs"...)
 - ✅ **Reordena** las pestañas arrastrándolas
-- ✅ **Splits**: divide la ventana en hasta **8 paneles** en cuadrícula para ver varias terminales a la vez
+- ✅ **Splits**: divide la ventana en hasta **8 paneles** en cuadrícula, cada uno con su título visible
+- ✅ **Grupos de paneles**: abre una terminal a pantalla completa aparte y vuelve a tu grupo anterior con un click o `Ctrl+Alt+←/→`
 - ✅ **Tema oscuro** (por defecto) y tema claro
 - ✅ **Persistencia**: recuerda títulos, orden de pestañas, shell de cada una y tema al reabrir
 - ✅ **Aviso de actualización**: la app te avisa cuando hay una versión nueva para descargar
@@ -67,12 +68,18 @@ La configuración se guarda automáticamente en `%APPDATA%\TerminalHub\terminalh
 | `Ctrl` + `Shift` + `E` | Agregar panel (hasta 8, prioridad en columnas) |
 | `Ctrl` + `Shift` + `O` | Agregar panel (hasta 8, prioridad en filas) |
 | `Ctrl` + `Shift` + `W` | Cerrar el panel enfocado (la terminal sigue abierta en su pestaña) |
+| `Ctrl` + `Shift` + `G` | Nuevo grupo de paneles (una terminal a pantalla completa, aparte) |
+| `Ctrl` + `Alt` + `←` / `→` o `Ctrl` + `Alt` + `1`…`9` | Cambiar entre grupos |
 | `Ctrl` + `Shift` + `C` / `V` | Copiar / pegar |
 | `Ctrl` + `C` (con texto seleccionado) | Copiar la selección (sin selección, envía `Ctrl+C` al shell) |
 | Click derecho en la terminal | Copia la selección, o pega si no hay selección |
 | Click central en una pestaña | Cerrar esa pestaña |
 
 Con la pantalla dividida: la pestaña activa se marca con una línea azul y las visibles en otros paneles con una línea gris. Haz click en un panel para enfocarlo y click en cualquier pestaña para cargarla en el panel enfocado. Al agregar un panel se muestra una de tus pestañas ya abiertas que no estaba a la vista; solo si todas están visibles se abre una terminal nueva. La cuadrícula se reacomoda sola (2, 3, 4… hasta 8 paneles). También puedes hacer **click derecho sobre una pestaña** para abrirla en un panel nuevo, renombrarla o cerrarla.
+
+Cuando hay más de un panel, cada uno muestra una **barra fina con su título** arriba (fuera del área de la consola); doble click en ella renombra la terminal.
+
+**Grupos de paneles**: si tienes un grupo de terminales armado y necesitas una a pantalla completa, crea un grupo nuevo con `Ctrl+Shift+G` (o el botón de ventanas superpuestas). Cada grupo recuerda su propia disposición de paneles, y cambias entre ellos con los números que aparecen en la barra superior, `Ctrl+Alt+←/→` o `Ctrl+Alt+1…9`. Click medio sobre el número cierra el grupo (sus terminales siguen abiertas como pestañas).
 
 Si tienes más pestañas de las que entran en la barra, deslízate con la **rueda del mouse** sobre ella (también hay una barra de scroll fina debajo). La pestaña activa siempre se mantiene a la vista. El botón `+` abre el menú para elegir shell, `◐` cambia el tema y `?` muestra la ayuda.
 
