@@ -209,7 +209,16 @@ html, body {
   cursor: pointer;
   text-align: left;
 }
-.menu button:hover { background: var(--accent-soft); }
+.menu button:hover:not(:disabled) { background: var(--accent-soft); }
+.menu button:disabled { opacity: 0.4; cursor: default; }
+
+#tab-menu {
+  position: fixed;
+  top: 0;
+  left: 0;
+  min-width: 190px;
+  z-index: 80;
+}
 .menu button kbd { margin-left: auto; }
 .menu-ico {
   font-family: Consolas, monospace;

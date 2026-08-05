@@ -44,6 +44,7 @@ const $newMenu = document.getElementById('new-menu');
 const $helpOverlay = document.getElementById('help-overlay');
 const $btnUnsplit = document.getElementById('btn-unsplit');
 const $updateBanner = document.getElementById('update-banner');
+const $tabMenu = document.getElementById('tab-menu');
 
 let saveTimer = null;
 function saveState() {
@@ -372,6 +373,11 @@ function renderTabs() {
         startRename(id);
       });
       tab.addEventListener('auxclick', (e) => { if (e.button === 1) closeTerminal(id); });
+      tab.addEventListener('contextmenu', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        showTabMenu(id, e.clientX, e.clientY);
+      });
     }
 
     tab.addEventListener('dragstart', (e) => {
@@ -407,6 +413,50 @@ function renderTabs() {
 
   const activeTab = $tabs.querySelector('.tab.active');
   if (activeTab) activeTab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+
+function openInNewPane(id) {
+  if (!sessions.has(id)) return;
+  const already = panes.findIndex((p) => p.sessionId === id);
+  if (already >= 0) {
+    setFocusedPane(already);
+    renderTabs();
+    focusActive();
+    return;
+  }
+  if (panes.length >= MAX_PANES) return;
+  const p = { el: newPaneEl(), sessionId: null };
+  panes.push(p);
+  $panes.appendChild(p.el);
+  layoutPanes();
+  showInPane(id, panes.length - 1);
+}
+
+function hideTabMenu() {
+  $tabMenu.classList.add('hidden');
+}
+
+function showTabMenu(id, x, y) {
+  $tabMenu.innerHTML = '';
+  const item = (label, fn, enabled) => {
+    const b = document.createElement('button');
+    b.textContent = label;
+    b.disabled = enabled === false;
+    b.addEventListener('click', (e) => {
+      e.stopPropagation();
+      hideTabMenu();
+      fn();
+    });
+    $tabMenu.appendChild(b);
+  };
+  const visible = panes.some((p) => p.sessionId === id);
+  item('Abrir en panel nuevo', () => openInNewPane(id), visible || panes.length < MAX_PANES);
+  item('Renombrar', () => startRename(id));
+  item('Cerrar terminal', () => closeTerminal(id));
+  $tabMenu.classList.remove('hidden');
+  const rect = $tabMenu.getBoundingClientRect();
+  $tabMenu.style.left = Math.max(4, Math.min(x, window.innerWidth - rect.width - 8)) + 'px';
+  $tabMenu.style.top = Math.max(4, Math.min(y, window.innerHeight - rect.height - 8)) + 'px';
 }
 
 function startRename(id) {
@@ -528,7 +578,10 @@ $newMenu.addEventListener('click', (e) => {
   $newMenu.classList.add('hidden');
   createTerminal(btn.dataset.shell);
 });
-document.addEventListener('click', () => $newMenu.classList.add('hidden'));
+document.addEventListener('click', () => {
+  $newMenu.classList.add('hidden');
+  hideTabMenu();
+});
 
 document.getElementById('btn-split-v').addEventListener('click', () => addPane('v'));
 document.getElementById('btn-split-h').addEventListener('click', () => addPane('h'));
