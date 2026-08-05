@@ -193,12 +193,22 @@ async function installUpdate() {
 
     const appDir = path.dirname(app.getPath('exe'));
     const bat = path.join(tmp, 'apply-update.bat');
+    const logPath = path.join(tmp, 'update.log');
     fs.writeFileSync(bat, [
       '@echo off',
+      'title TerminalHub - actualizacion',
+      'echo Esperando a que TerminalHub se cierre...',
+      'set tries=0',
       ':wait',
       'timeout /t 1 /nobreak >nul',
-      '2>nul ren "' + appDir + '\\TerminalHub.exe" TerminalHub.exe || goto wait',
-      'robocopy "' + src + '" "' + appDir + '" /e /r:2 /w:1 >nul',
+      'set /a tries+=1',
+      'if %tries% GEQ 60 goto copy',
+      'tasklist /FI "IMAGENAME eq TerminalHub.exe" 2>nul | find /I "TerminalHub.exe" >nul && goto wait',
+      'timeout /t 2 /nobreak >nul',
+      ':copy',
+      'echo Instalando la actualizacion...',
+      'robocopy "' + src + '" "' + appDir + '" /e /r:20 /w:1 >"' + logPath + '" 2>&1',
+      'echo Listo. Abriendo TerminalHub...',
       'start "" "' + appDir + '\\TerminalHub.exe"',
       'rd /s /q "' + extractDir + '" 2>nul',
       'del /q "' + zipPath + '" 2>nul',
