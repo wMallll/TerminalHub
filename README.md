@@ -72,7 +72,9 @@ La configuración se guarda automáticamente en `%APPDATA%\TerminalHub\terminalh
 | Click derecho en la terminal | Copia la selección, o pega si no hay selección |
 | Click central en una pestaña | Cerrar esa pestaña |
 
-Con la pantalla dividida: la pestaña activa se marca con una línea azul y las visibles en otros paneles con una línea gris. Haz click en un panel para enfocarlo y click en cualquier pestaña para cargarla en el panel enfocado. Cada panel nuevo abre una terminal del mismo shell que la activa, y la cuadrícula se reacomoda sola (2, 3, 4… hasta 8 paneles). El botón `+` abre el menú para elegir shell, `◐` cambia el tema y `?` muestra la ayuda.
+Con la pantalla dividida: la pestaña activa se marca con una línea azul y las visibles en otros paneles con una línea gris. Haz click en un panel para enfocarlo y click en cualquier pestaña para cargarla en el panel enfocado. Al agregar un panel se muestra una de tus pestañas ya abiertas que no estaba a la vista; solo si todas están visibles se abre una terminal nueva. La cuadrícula se reacomoda sola (2, 3, 4… hasta 8 paneles). También puedes hacer **click derecho sobre una pestaña** para abrirla en un panel nuevo, renombrarla o cerrarla.
+
+Si tienes más pestañas de las que entran en la barra, deslízate con la **rueda del mouse** sobre ella (también hay una barra de scroll fina debajo). La pestaña activa siempre se mantiene a la vista. El botón `+` abre el menú para elegir shell, `◐` cambia el tema y `?` muestra la ayuda.
 
 ## Abrir tus comandos automáticamente (startup.json)
 
