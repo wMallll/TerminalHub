@@ -74,6 +74,34 @@ La configuración se guarda automáticamente en `%APPDATA%\TerminalHub\terminalh
 
 Con la pantalla dividida: la pestaña activa se marca con una línea azul y las visibles en otros paneles con una línea gris. Haz click en un panel para enfocarlo y click en cualquier pestaña para cargarla en el panel enfocado. Cada panel nuevo abre una terminal del mismo shell que la activa, y la cuadrícula se reacomoda sola (2, 3, 4… hasta 8 paneles). El botón `+` abre el menú para elegir shell, `◐` cambia el tema y `?` muestra la ayuda.
 
+## Abrir tus comandos automáticamente (startup.json)
+
+Si todos los días abrís las mismas terminales (servidores, APIs, watchers...), podés definirlas en un archivo `startup.json` y TerminalHub las abre todas al iniciar, cada una en su pestaña con su nombre:
+
+```json
+{
+  "cwd": "C:\\Users\\tu-usuario\\Desktop\\APIS",
+  "tabs": [
+    { "title": "servidor", "command": "python servidor.py" },
+    { "title": "worker", "command": "python worker.py" },
+    { "title": "bridge", "command": "node bridge.js" },
+    { "title": "libre" }
+  ]
+}
+```
+
+- **`cwd`**: carpeta de trabajo para todas las pestañas (opcional; cada pestaña puede tener su propio `"cwd"` que pisa al general).
+- **`title`**: nombre de la pestaña (opcional).
+- **`command`**: comando a ejecutar al abrir. La terminal queda abierta al terminar, como `cmd /k`. Sin `command`, abre una terminal vacía.
+- **`shell`**: `"cmd"` (por defecto) o `"powershell"`.
+
+El archivo puede ir en **cualquiera** de estos dos lugares:
+
+1. `%APPDATA%\TerminalHub\startup.json` — **recomendado**: sobrevive cuando actualizás la app reemplazando su carpeta.
+2. Junto a `TerminalHub.exe` (tiene prioridad si existen los dos).
+
+Si hay `startup.json`, esas son las pestañas al iniciar. Si no, la app restaura las pestañas de la última sesión.
+
 ## Actualizaciones
 
 Al iniciar, TerminalHub consulta la última versión publicada en este repositorio (API pública de GitHub, sin telemetría ni datos personales). Si hay una versión más nueva que la instalada, aparece un aviso dentro de la app con un botón para ir a la descarga. Como la app es portable, actualizar es simplemente descargar el zip nuevo y reemplazar la carpeta.

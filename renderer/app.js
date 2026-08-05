@@ -263,7 +263,8 @@ async function createTerminal(shell, opts = {}) {
   requestAnimationFrame(async () => {
     try { fit.fit(); } catch (_) {}
     const res = await window.termAPI.create({
-      id, shellKind: shell, cols: term.cols, rows: term.rows
+      id, shellKind: shell, cols: term.cols, rows: term.rows,
+      cwd: opts.cwd, command: opts.command
     });
     if (!res || !res.ok) {
       term.write('\x1b[31m No se pudo iniciar el shell (' + shell + ').\r\n ' +
@@ -575,6 +576,25 @@ window.addEventListener('resize', refitVisible);
   const state = await window.termAPI.loadState();
   if (state && state.theme) applyTheme(state.theme);
   else applyTheme('dark');
+
+  const startup = await window.termAPI.loadStartup();
+  if (startup) {
+    for (const t of startup.tabs) {
+      if (!t || typeof t !== 'object') continue;
+      const shell = t.shell === 'powershell' ? 'powershell' : 'cmd';
+      await createTerminal(shell, {
+        title: t.title || undefined,
+        custom: !!t.title,
+        background: true,
+        cwd: t.cwd || startup.cwd,
+        command: t.command
+      });
+    }
+    if (order.length > 0) {
+      showInPane(order[0], 0);
+      return;
+    }
+  }
 
   const tabs = (state && Array.isArray(state.tabs)) ? state.tabs : null;
   if (tabs && tabs.length > 0) {

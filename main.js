@@ -14,14 +14,35 @@ const sessions = new Map();
 
 const stateFile = () => path.join(app.getPath('userData'), 'terminalhub-state.json');
 
-function resolveShell(kind) {
+function resolveShell(kind, command) {
   if (process.platform === 'win32') {
     if (kind === 'powershell') {
-      return { file: 'powershell.exe', args: ['-NoLogo'] };
+      return {
+        file: 'powershell.exe',
+        args: command ? ['-NoLogo', '-NoExit', '-Command', command] : ['-NoLogo']
+      };
     }
-    return { file: process.env.ComSpec || 'cmd.exe', args: [] };
+    return {
+      file: process.env.ComSpec || 'cmd.exe',
+      args: command ? ['/k', command] : []
+    };
   }
-  return { file: process.env.SHELL || 'bash', args: [] };
+  const sh = process.env.SHELL || 'bash';
+  return { file: sh, args: command ? ['-c', command + '; exec ' + sh] : [] };
+}
+
+function loadStartupConfig() {
+  const candidates = [
+    path.join(path.dirname(app.getPath('exe')), 'startup.json'),
+    path.join(app.getPath('userData'), 'startup.json')
+  ];
+  for (const f of candidates) {
+    try {
+      const cfg = JSON.parse(fs.readFileSync(f, 'utf8'));
+      if (cfg && Array.isArray(cfg.tabs) && cfg.tabs.length > 0) return cfg;
+    } catch (_) {}
+  }
+  return null;
 }
 
 function createWindow() {
@@ -102,14 +123,18 @@ app.on('window-all-closed', () => {
   app.quit();
 });
 
-ipcMain.handle('pty-create', (_e, { id, shellKind, cols, rows }) => {
-  const { file, args } = resolveShell(shellKind);
+ipcMain.handle('pty-create', (_e, { id, shellKind, cols, rows, cwd, command }) => {
+  const { file, args } = resolveShell(shellKind, typeof command === 'string' && command.trim() ? command.trim() : null);
+  let workDir = process.env.USERPROFILE || process.env.HOME || process.cwd();
+  if (typeof cwd === 'string' && cwd.trim()) {
+    try { if (fs.statSync(cwd).isDirectory()) workDir = cwd; } catch (_) {}
+  }
   try {
     const p = pty.spawn(file, args, {
       name: 'xterm-256color',
       cols: Math.max(2, cols || 80),
       rows: Math.max(2, rows || 24),
-      cwd: process.env.USERPROFILE || process.env.HOME || process.cwd(),
+      cwd: workDir,
       env: process.env
     });
     sessions.set(id, p);
@@ -149,6 +174,8 @@ ipcMain.on('open-url', (_e, url) => {
     try { shell.openExternal(url); } catch (_) {}
   }
 });
+
+ipcMain.handle('startup-load', () => loadStartupConfig());
 
 ipcMain.handle('state-load', () => {
   try {

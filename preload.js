@@ -9,6 +9,7 @@ contextBridge.exposeInMainWorld('termAPI', {
   kill: (id) => ipcRenderer.send('pty-kill', { id }),
   onData: (cb) => ipcRenderer.on('pty-data', (_e, msg) => cb(msg)),
   onExit: (cb) => ipcRenderer.on('pty-exit', (_e, msg) => cb(msg)),
+  loadStartup: () => ipcRenderer.invoke('startup-load'),
   loadState: () => ipcRenderer.invoke('state-load'),
   saveState: (state) => ipcRenderer.send('state-save', state),
   onUpdate: (cb) => ipcRenderer.on('update-available', (_e, msg) => cb(msg)),
