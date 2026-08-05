@@ -64,9 +64,14 @@ html, body {
   gap: 4px;
   flex: 1 1 auto;
   overflow-x: auto;
-  scrollbar-width: none;
+  overflow-y: hidden;
+  scrollbar-width: thin;
+  scrollbar-color: var(--border) transparent;
 }
-#tabs::-webkit-scrollbar { display: none; }
+#tabs::-webkit-scrollbar { height: 4px; }
+#tabs::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+#tabs::-webkit-scrollbar-thumb:hover { background: var(--fg-dim); }
+#tabs::-webkit-scrollbar-track { background: transparent; }
 
 .tab {
   display: flex;
@@ -79,8 +84,8 @@ html, body {
   border-radius: 8px 8px 0 0;
   cursor: pointer;
   max-width: 220px;
-  min-width: 110px;
-  flex: 0 1 auto;
+  min-width: 92px;
+  flex: 0 0 auto;
   transition: background 0.12s ease;
   position: relative;
 }

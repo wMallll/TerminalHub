@@ -563,6 +563,13 @@ window.termAPI.onExit(({ id }) => {
   closeTerminal(id, { fromExit: true });
 });
 
+$tabs.addEventListener('wheel', (e) => {
+  if (e.deltaY) {
+    e.preventDefault();
+    $tabs.scrollLeft += e.deltaY;
+  }
+}, { passive: false });
+
 const resizeObserver = new ResizeObserver(() => refitVisible());
 resizeObserver.observe($panes);
 window.addEventListener('resize', refitVisible);
