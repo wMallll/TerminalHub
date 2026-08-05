@@ -598,19 +598,50 @@ $helpOverlay.addEventListener('click', (e) => {
 document.getElementById('welcome-cmd').addEventListener('click', () => createTerminal('cmd'));
 document.getElementById('welcome-ps').addEventListener('click', () => createTerminal('powershell'));
 
+let updateInfo = null;
+let updating = false;
+const $updateText = document.getElementById('update-text');
+const $updateBtn = document.getElementById('update-download');
+
 document.getElementById('update-close').addEventListener('click', () => {
-  $updateBanner.classList.add('hidden');
+  if (!updating) $updateBanner.classList.add('hidden');
 });
-document.getElementById('update-download').addEventListener('click', () => {
-  const url = $updateBanner.dataset.url;
-  if (url) window.termAPI.openUrl(url);
+$updateBtn.addEventListener('click', () => {
+  if (!updateInfo) return;
+  if (updateInfo.canAuto && !updateInfo.failed) {
+    updating = true;
+    $updateBtn.disabled = true;
+    $updateText.textContent = 'Preparando descarga…';
+    window.termAPI.installUpdate();
+  } else {
+    window.termAPI.openUrl(updateInfo.url);
+  }
 });
 
-window.termAPI.onUpdate(({ version, url }) => {
-  document.getElementById('update-text').textContent =
-    'Nueva versión v' + version + ' disponible';
-  $updateBanner.dataset.url = url;
+window.termAPI.onUpdate((info) => {
+  updateInfo = info;
+  $updateText.textContent = 'Nueva versión v' + info.version + ' disponible';
+  $updateBtn.textContent = info.canAuto ? 'Actualizar' : 'Descargar';
+  $updateBtn.disabled = false;
   $updateBanner.classList.remove('hidden');
+});
+
+window.termAPI.onUpdateProgress(({ phase, percent }) => {
+  if (phase === 'download') {
+    $updateText.textContent = 'Descargando actualización… ' + percent + '%';
+  } else if (phase === 'extract') {
+    $updateText.textContent = 'Preparando archivos…';
+  } else if (phase === 'install') {
+    $updateText.textContent = 'Instalando… la app se reiniciará sola';
+  }
+});
+
+window.termAPI.onUpdateError(() => {
+  updating = false;
+  if (updateInfo) updateInfo.failed = true;
+  $updateText.textContent = 'No se pudo actualizar automáticamente';
+  $updateBtn.textContent = 'Descargar manual';
+  $updateBtn.disabled = false;
 });
 
 window.termAPI.onData(({ id, data }) => {
