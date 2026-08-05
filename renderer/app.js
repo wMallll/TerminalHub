@@ -156,7 +156,13 @@ async function addPane(bias) {
   layoutPanes();
   const idx = panes.length - 1;
   setFocusedPane(idx);
-  await createTerminal(shell, { paneIdx: idx });
+  const inPane = (x) => panes.some((pp) => pp.sessionId === x);
+  const hidden = order.find((x) => !inPane(x));
+  if (hidden) {
+    showInPane(hidden, idx);
+  } else {
+    await createTerminal(shell, { paneIdx: idx });
+  }
 }
 
 function closePane(idx) {
