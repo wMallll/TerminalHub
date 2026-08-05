@@ -75,17 +75,33 @@ function currentSessionId() {
   return p ? p.sessionId : null;
 }
 
-function newPaneEl() {
+function makePane() {
   const el = document.createElement('section');
   el.className = 'pane';
+  const titleEl = document.createElement('div');
+  titleEl.className = 'pane-title';
+  el.appendChild(titleEl);
+  const pane = { el, titleEl, sessionId: null };
   el.addEventListener('mousedown', () => {
-    const i = panes.findIndex((p) => p.el === el);
+    const i = panes.indexOf(pane);
     if (i >= 0) {
       setFocusedPane(i);
       renderTabs();
     }
   });
-  return el;
+  titleEl.addEventListener('dblclick', () => {
+    if (pane.sessionId) startRename(pane.sessionId);
+  });
+  return pane;
+}
+
+function updatePaneTitles() {
+  for (const p of panes) {
+    if (!p.titleEl) continue;
+    const s = p.sessionId ? sessions.get(p.sessionId) : null;
+    p.titleEl.textContent = s ? s.title : '';
+    p.titleEl.title = s ? s.title : '';
+  }
 }
 
 function setFocusedPane(i) {
@@ -108,6 +124,7 @@ function layoutPanes() {
   if (n > cols && r !== 0) {
     panes[n - 1].el.style.gridColumn = 'span ' + (cols - r + 1);
   }
+  $panes.classList.toggle('multi', n > 1);
   $btnUnsplit.classList.toggle('hidden', n < 2);
   refitVisible();
 }
@@ -151,7 +168,7 @@ async function addPane(bias) {
   if (bias) layoutBias = bias;
   const active = sessions.get(currentSessionId());
   const shell = active ? active.shell : DEFAULT_SHELL;
-  const p = { el: newPaneEl(), sessionId: null };
+  const p = makePane();
   panes.push(p);
   $panes.appendChild(p.el);
   layoutPanes();
@@ -191,7 +208,7 @@ function unsplitAll() {
   }
   panes = panes.filter((p) => p.sessionId === keep && keep !== null);
   if (panes.length === 0) {
-    const p = { el: newPaneEl(), sessionId: null };
+    const p = makePane();
     panes.push(p);
     $panes.appendChild(p.el);
     if (keep) showInPane(keep, 0);
@@ -413,6 +430,7 @@ function renderTabs() {
 
   const activeTab = $tabs.querySelector('.tab.active');
   if (activeTab) activeTab.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+  updatePaneTitles();
 }
 
 function openInNewPane(id) {
@@ -425,7 +443,7 @@ function openInNewPane(id) {
     return;
   }
   if (panes.length >= MAX_PANES) return;
-  const p = { el: newPaneEl(), sessionId: null };
+  const p = makePane();
   panes.push(p);
   $panes.appendChild(p.el);
   layoutPanes();
@@ -665,7 +683,7 @@ resizeObserver.observe($panes);
 window.addEventListener('resize', refitVisible);
 
 (async function init() {
-  const p = { el: newPaneEl(), sessionId: null };
+  const p = makePane();
   panes.push(p);
   $panes.appendChild(p.el);
   layoutPanes();

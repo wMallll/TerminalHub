@@ -249,6 +249,28 @@ html, body {
 }
 .pane.focused { border-color: var(--accent); }
 
+.pane-title {
+  position: absolute;
+  top: 0; left: 0; right: 0;
+  height: 24px;
+  display: none;
+  align-items: center;
+  padding: 0 10px;
+  font-size: 11px;
+  color: var(--fg-dim);
+  background: var(--bg-topbar);
+  border-bottom: 1px solid var(--border);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  z-index: 5;
+  cursor: default;
+  user-select: none;
+}
+#panes.multi .pane-title { display: flex; }
+#panes.multi .pane .term-holder { top: 24px; }
+.pane.focused .pane-title { color: var(--fg); border-bottom-color: var(--accent); }
+
 #update-banner {
   position: absolute;
   right: 16px;
