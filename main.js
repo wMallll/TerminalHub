@@ -3,7 +3,9 @@
 const { app, BrowserWindow, ipcMain, Menu, shell } = require('electron');
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 const https = require('https');
+const { execFile, spawn } = require('child_process');
 
 const REPO_URL = 'https://github.com/wMallll/TerminalHub';
 
@@ -85,6 +87,8 @@ function isNewerVersion(a, b) {
   return false;
 }
 
+let pendingUpdate = null;
+
 function checkForUpdates() {
   const req = https.get({
     hostname: 'api.github.com',
@@ -98,9 +102,16 @@ function checkForUpdates() {
         const info = JSON.parse(body);
         const latest = String(info.tag_name || '').replace(/^v/, '');
         if (latest && isNewerVersion(latest, app.getVersion()) && win && !win.isDestroyed()) {
+          const asset = (info.assets || []).find((a) => /win64-portable\.zip$/i.test(a.name || ''));
+          pendingUpdate = {
+            version: latest,
+            zipUrl: asset ? asset.browser_download_url : null,
+            url: info.html_url || (REPO_URL + '/releases/latest')
+          };
           win.webContents.send('update-available', {
             version: latest,
-            url: info.html_url || (REPO_URL + '/releases/latest')
+            url: pendingUpdate.url,
+            canAuto: !!(pendingUpdate.zipUrl && process.platform === 'win32')
           });
         }
       } catch (_) {}
@@ -108,6 +119,99 @@ function checkForUpdates() {
   });
   req.on('error', () => {});
   req.setTimeout(10000, () => req.destroy());
+}
+
+function download(url, dest, onProgress, redirects) {
+  return new Promise((resolve, reject) => {
+    if ((redirects || 0) > 5) return reject(new Error('demasiadas redirecciones'));
+    let u;
+    try { u = new URL(url); } catch (err) { return reject(err); }
+    const req = https.get({
+      hostname: u.hostname,
+      path: u.pathname + u.search,
+      headers: { 'User-Agent': 'TerminalHub', 'Accept': 'application/octet-stream' }
+    }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        res.resume();
+        return resolve(download(res.headers.location, dest, onProgress, (redirects || 0) + 1));
+      }
+      if (res.statusCode !== 200) {
+        res.resume();
+        return reject(new Error('HTTP ' + res.statusCode));
+      }
+      const total = parseInt(res.headers['content-length'] || '0', 10);
+      let got = 0;
+      let lastPct = -1;
+      const out = fs.createWriteStream(dest);
+      res.on('data', (chunk) => {
+        got += chunk.length;
+        if (total > 0) {
+          const pct = Math.floor((got * 100) / total);
+          if (pct !== lastPct) { lastPct = pct; onProgress(pct); }
+        }
+      });
+      res.pipe(out);
+      out.on('finish', () => out.close(resolve));
+      out.on('error', reject);
+      res.on('error', reject);
+    });
+    req.on('error', reject);
+    req.setTimeout(30000, () => req.destroy(new Error('tiempo de espera agotado')));
+  });
+}
+
+async function installUpdate() {
+  const send = (ch, data) => { if (win && !win.isDestroyed()) win.webContents.send(ch, data); };
+  if (!pendingUpdate || !pendingUpdate.zipUrl || process.platform !== 'win32') {
+    send('update-error', { message: 'actualización automática no disponible' });
+    return;
+  }
+  try {
+    const tmp = path.join(os.tmpdir(), 'TerminalHub-update');
+    fs.rmSync(tmp, { recursive: true, force: true });
+    fs.mkdirSync(tmp, { recursive: true });
+    const zipPath = path.join(tmp, 'update.zip');
+    await download(pendingUpdate.zipUrl, zipPath, (pct) => send('update-progress', { phase: 'download', percent: pct }));
+
+    send('update-progress', { phase: 'extract' });
+    const extractDir = path.join(tmp, 'extracted');
+    await new Promise((resolve, reject) => {
+      execFile('powershell.exe', [
+        '-NoProfile', '-ExecutionPolicy', 'Bypass', '-Command',
+        "Expand-Archive -LiteralPath '" + zipPath + "' -DestinationPath '" + extractDir + "' -Force"
+      ], { windowsHide: true }, (err) => (err ? reject(err) : resolve()));
+    });
+
+    let src = extractDir;
+    const entries = fs.readdirSync(extractDir);
+    if (entries.length === 1 && fs.statSync(path.join(extractDir, entries[0])).isDirectory()) {
+      src = path.join(extractDir, entries[0]);
+    }
+    if (!fs.existsSync(path.join(src, 'TerminalHub.exe'))) {
+      throw new Error('el paquete descargado no es válido');
+    }
+
+    const appDir = path.dirname(app.getPath('exe'));
+    const bat = path.join(tmp, 'apply-update.bat');
+    fs.writeFileSync(bat, [
+      '@echo off',
+      ':wait',
+      'timeout /t 1 /nobreak >nul',
+      '2>nul ren "' + appDir + '\\TerminalHub.exe" TerminalHub.exe || goto wait',
+      'robocopy "' + src + '" "' + appDir + '" /e /r:2 /w:1 >nul',
+      'start "" "' + appDir + '\\TerminalHub.exe"',
+      'rd /s /q "' + extractDir + '" 2>nul',
+      'del /q "' + zipPath + '" 2>nul',
+      '(goto) 2>nul & del "%~f0"'
+    ].join('\r\n'), 'utf8');
+
+    send('update-progress', { phase: 'install' });
+    const child = spawn('cmd.exe', ['/c', bat], { detached: true, stdio: 'ignore', windowsHide: true });
+    child.unref();
+    setTimeout(() => app.quit(), 500);
+  } catch (err) {
+    send('update-error', { message: String((err && err.message) || err) });
+  }
 }
 
 Menu.setApplicationMenu(null);
@@ -168,6 +272,8 @@ ipcMain.on('pty-kill', (_e, { id }) => {
     sessions.delete(id);
   }
 });
+
+ipcMain.on('update-install', () => { installUpdate(); });
 
 ipcMain.on('open-url', (_e, url) => {
   if (typeof url === 'string' && url.startsWith(REPO_URL)) {

@@ -13,6 +13,9 @@ contextBridge.exposeInMainWorld('termAPI', {
   loadState: () => ipcRenderer.invoke('state-load'),
   saveState: (state) => ipcRenderer.send('state-save', state),
   onUpdate: (cb) => ipcRenderer.on('update-available', (_e, msg) => cb(msg)),
+  onUpdateProgress: (cb) => ipcRenderer.on('update-progress', (_e, msg) => cb(msg)),
+  onUpdateError: (cb) => ipcRenderer.on('update-error', (_e, msg) => cb(msg)),
+  installUpdate: () => ipcRenderer.send('update-install'),
   openUrl: (url) => ipcRenderer.send('open-url', url),
   platform: process.platform
 });
