@@ -13,6 +13,11 @@
     <header id="topbar">
       <div id="tabs" role="tablist"></div>
       <div class="topbar-actions">
+        <div id="groups"></div>
+        <button id="btn-new-group" class="icon-btn" title="Nuevo grupo de paneles (Ctrl+Shift+G)">
+          <svg width="14" height="14" viewBox="0 0 16 16"><rect x="1" y="4" width="11" height="11" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><path d="M5 1.5h8.5A1.5 1.5 0 0 1 15 3v8.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        </button>
+        <span class="sep"></span>
         <div class="newtab-wrap">
           <button id="btn-new" class="icon-btn" title="Nueva terminal (Ctrl+T)">+</button>
           <div id="new-menu" class="menu hidden">
@@ -69,6 +74,8 @@
           <tr><td><kbd>F2</kbd> o doble click</td><td>Renombrar terminal</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> / <kbd>O</kbd></td><td>Agregar panel (hasta 8, columnas / filas)</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>W</kbd></td><td>Cerrar el panel enfocado (la terminal sigue abierta)</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>G</kbd></td><td>Nuevo grupo de paneles (pantalla completa aparte)</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>←</kbd> / <kbd>→</kbd> o <kbd>Ctrl</kbd>+<kbd>Alt</kbd>+<kbd>1</kbd>…<kbd>9</kbd></td><td>Cambiar de grupo (click medio en el número lo cierra)</td></tr>
           <tr><td>Click derecho en una pestaña</td><td>Abrir en panel nuevo, renombrar o cerrar</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> / <kbd>V</kbd></td><td>Copiar / pegar</td></tr>
           <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> (con selección)</td><td>Copiar selección</td></tr>

@@ -32,6 +32,8 @@ let order = [];
 let panes = [];
 let focusedPane = 0;
 let layoutBias = 'v';
+let groups = [{ panes: [], focusedPane: 0, layoutBias: 'v' }];
+let activeGroup = 0;
 let theme = 'dark';
 let draggingId = null;
 let renamingId = null;
@@ -45,6 +47,7 @@ const $helpOverlay = document.getElementById('help-overlay');
 const $btnUnsplit = document.getElementById('btn-unsplit');
 const $updateBanner = document.getElementById('update-banner');
 const $tabMenu = document.getElementById('tab-menu');
+const $groups = document.getElementById('groups');
 
 let saveTimer = null;
 function saveState() {
@@ -221,6 +224,100 @@ function unsplitAll() {
   focusActive();
 }
 
+function snapshotGroup() {
+  groups[activeGroup] = { panes, focusedPane, layoutBias };
+}
+
+function detachCurrentPanes() {
+  for (const p of panes) {
+    if (p.sessionId) parkSession(p.sessionId);
+    p.el.remove();
+  }
+}
+
+function renderGroups() {
+  $groups.innerHTML = '';
+  if (groups.length < 2) return;
+  groups.forEach((_, i) => {
+    const chip = document.createElement('button');
+    chip.className = 'group-chip' + (i === activeGroup ? ' active' : '');
+    chip.textContent = String(i + 1);
+    chip.title = 'Grupo ' + (i + 1) + ' (click medio: cerrar grupo)';
+    chip.addEventListener('click', () => switchGroup(i));
+    chip.addEventListener('auxclick', (e) => { if (e.button === 1) closeGroup(i); });
+    $groups.appendChild(chip);
+  });
+}
+
+async function newGroup() {
+  snapshotGroup();
+  detachCurrentPanes();
+  groups.push({ panes: [], focusedPane: 0, layoutBias: 'v' });
+  activeGroup = groups.length - 1;
+  const p = makePane();
+  panes = [p];
+  $panes.appendChild(p.el);
+  focusedPane = 0;
+  layoutBias = 'v';
+  layoutPanes();
+  setFocusedPane(0);
+  renderGroups();
+  await createTerminal(DEFAULT_SHELL, { paneIdx: 0 });
+  snapshotGroup();
+}
+
+function switchGroup(idx) {
+  if (idx === activeGroup || idx < 0 || idx >= groups.length) return;
+  snapshotGroup();
+  detachCurrentPanes();
+  activeGroup = idx;
+  const g = groups[idx];
+  panes = (g.panes || []).slice();
+  for (const p of panes) {
+    if (p.sessionId && !sessions.has(p.sessionId)) p.sessionId = null;
+  }
+  if (panes.length === 0) panes = [makePane()];
+  layoutBias = g.layoutBias || 'v';
+  for (const p of panes) {
+    $panes.appendChild(p.el);
+    if (p.sessionId) {
+      const s = sessions.get(p.sessionId);
+      p.el.appendChild(s.el);
+      s.el.classList.add('visible');
+    }
+  }
+  focusedPane = Math.min(g.focusedPane || 0, panes.length - 1);
+  layoutPanes();
+  setFocusedPane(focusedPane);
+  requestAnimationFrame(() => {
+    for (const p of panes) {
+      const s = p.sessionId ? sessions.get(p.sessionId) : null;
+      if (s) {
+        try { s.fit.fit(); s.term.refresh(0, s.term.rows - 1); } catch (_) {}
+      }
+    }
+  });
+  renderTabs();
+  renderGroups();
+  focusActive();
+}
+
+function closeGroup(idx) {
+  if (groups.length <= 1 || idx < 0 || idx >= groups.length) return;
+  if (idx === activeGroup) {
+    switchGroup(idx > 0 ? idx - 1 : 1);
+  }
+  const removed = groups.splice(idx, 1)[0];
+  if (removed && removed.panes) {
+    for (const p of removed.panes) {
+      if (p.sessionId) parkSession(p.sessionId);
+      try { p.el.remove(); } catch (_) {}
+    }
+  }
+  if (activeGroup > idx) activeGroup--;
+  renderGroups();
+}
+
 async function createTerminal(shell, opts = {}) {
   const id = makeId();
   const el = document.createElement('div');
@@ -323,6 +420,12 @@ function closeTerminal(id, { fromExit = false } = {}) {
       const fallback = order[Math.min(idx, order.length - 1)];
       const candidate = fallback && !inPane(fallback) ? fallback : order.find((x) => !inPane(x));
       if (candidate) showInPane(candidate, paneIdx);
+    }
+  }
+
+  for (const g of groups) {
+    if (g && g.panes && g.panes !== panes) {
+      for (const p of g.panes) { if (p.sessionId === id) p.sessionId = null; }
     }
   }
 
@@ -533,7 +636,10 @@ function pasteInto(term) {
 
 function isAppShortcut(e) {
   const ctrl = e.ctrlKey && !e.altKey && !e.metaKey;
+  const ctrlAlt = e.ctrlKey && e.altKey && !e.shiftKey && !e.metaKey;
+  if (ctrlAlt && (e.code === 'ArrowLeft' || e.code === 'ArrowRight' || /^Digit[1-9]$/.test(e.code))) return true;
   if (!ctrl && e.key !== 'F2' && e.key !== 'Escape') return false;
+  if (ctrl && e.shiftKey && e.code === 'KeyG') return true;
   if (ctrl && e.code === 'KeyT') return true;
   if (ctrl && e.code === 'KeyW') return true;
   if (ctrl && e.code === 'Tab') return true;
@@ -555,6 +661,19 @@ window.addEventListener('keydown', (e) => {
   e.stopPropagation();
 
   const ctrl = e.ctrlKey;
+  if (ctrl && e.altKey && (e.code === 'ArrowLeft' || e.code === 'ArrowRight')) {
+    const delta = e.code === 'ArrowRight' ? 1 : -1;
+    switchGroup((activeGroup + delta + groups.length) % groups.length);
+    return;
+  }
+  if (ctrl && e.altKey && /^Digit[1-9]$/.test(e.code)) {
+    switchGroup(parseInt(e.code.slice(5), 10) - 1);
+    return;
+  }
+  if (ctrl && e.shiftKey && e.code === 'KeyG') {
+    newGroup();
+    return;
+  }
   if (ctrl && e.code === 'KeyT') {
     createTerminal(e.shiftKey ? 'powershell' : DEFAULT_SHELL);
   } else if (ctrl && e.code === 'KeyW') {
@@ -601,6 +720,7 @@ document.addEventListener('click', () => {
   hideTabMenu();
 });
 
+document.getElementById('btn-new-group').addEventListener('click', () => newGroup());
 document.getElementById('btn-split-v').addEventListener('click', () => addPane('v'));
 document.getElementById('btn-split-h').addEventListener('click', () => addPane('h'));
 $btnUnsplit.addEventListener('click', () => unsplitAll());
@@ -687,6 +807,8 @@ window.addEventListener('resize', refitVisible);
   panes.push(p);
   $panes.appendChild(p.el);
   layoutPanes();
+  snapshotGroup();
+  renderGroups();
 
   const state = await window.termAPI.loadState();
   if (state && state.theme) applyTheme(state.theme);
