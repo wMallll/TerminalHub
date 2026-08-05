@@ -1,0 +1,32 @@
+{
+  "name": "terminalhub",
+  "productName": "TerminalHub",
+  "version": "1.1.0",
+  "description": "Gestor de terminales con pestañas para Windows (CMD / PowerShell)",
+  "author": "wMal",
+  "license": "MIT",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "pack:win": "electron-packager . TerminalHub --platform=win32 --arch=x64 --out=dist --overwrite --prune=true --ignore=\"^/dist\" --ignore=\"^/\\.git\""
+  },
+  "dependencies": {
+    "@lydell/node-pty": "1.1.0",
+    "@lydell/node-pty-win32-x64": "1.1.0",
+    "@xterm/addon-fit": "^0.10.0",
+    "@xterm/addon-web-links": "^0.11.0",
+    "@xterm/xterm": "^5.5.0"
+  },
+  "devDependencies": {
+    "@electron/packager": "^18.3.6",
+    "electron": "^33.4.11"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/wMallll/TerminalHub.git"
+  },
+  "homepage": "https://github.com/wMallll/TerminalHub",
+  "bugs": {
+    "url": "https://github.com/wMallll/TerminalHub/issues"
+  }
+}

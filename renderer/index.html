@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta http-equiv="Content-Security-Policy"
+        content="default-src 'self'; style-src 'self' 'unsafe-inline'; script-src 'self'; img-src 'self' data:;" />
+  <title>TerminalHub</title>
+  <link rel="stylesheet" href="../node_modules/@xterm/xterm/css/xterm.css" />
+  <link rel="stylesheet" href="style.css" />
+</head>
+<body data-theme="dark">
+  <div id="app">
+    <header id="topbar">
+      <div id="tabs" role="tablist"></div>
+      <div class="topbar-actions">
+        <div class="newtab-wrap">
+          <button id="btn-new" class="icon-btn" title="Nueva terminal (Ctrl+T)">+</button>
+          <div id="new-menu" class="menu hidden">
+            <button data-shell="cmd"><span class="menu-ico">&gt;_</span> CMD <kbd>Ctrl+T</kbd></button>
+            <button data-shell="powershell"><span class="menu-ico ps">PS</span> PowerShell <kbd>Ctrl+Shift+T</kbd></button>
+          </div>
+        </div>
+        <span class="sep"></span>
+        <button id="btn-split-v" class="icon-btn" title="Agregar panel — prioridad en columnas (Ctrl+Shift+E)">
+          <svg width="14" height="14" viewBox="0 0 16 16"><rect x="1" y="2" width="6" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="9" y="2" width="6" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        </button>
+        <button id="btn-split-h" class="icon-btn" title="Agregar panel — prioridad en filas (Ctrl+Shift+O)">
+          <svg width="14" height="14" viewBox="0 0 16 16"><rect x="2" y="1" width="12" height="6" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/><rect x="2" y="9" width="12" height="6" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        </button>
+        <button id="btn-unsplit" class="icon-btn hidden" title="Cerrar todas las divisiones">
+          <svg width="14" height="14" viewBox="0 0 16 16"><rect x="1" y="2" width="14" height="12" rx="1.5" fill="none" stroke="currentColor" stroke-width="1.6"/></svg>
+        </button>
+        <span class="sep"></span>
+        <button id="btn-theme" class="icon-btn" title="Cambiar tema claro/oscuro">◐</button>
+        <button id="btn-help" class="icon-btn" title="Atajos de teclado">?</button>
+      </div>
+    </header>
+
+    <main id="panes"></main>
+    <div id="park" class="hidden"></div>
+
+    <div id="update-banner" class="hidden">
+      <span id="update-text"></span>
+      <button id="update-download">Descargar</button>
+      <button id="update-close" title="Cerrar">×</button>
+    </div>
+
+    <div id="welcome" class="hidden">
+      <div class="welcome-card">
+        <h1>TerminalHub</h1>
+        <p>No hay terminales abiertas.</p>
+        <div class="welcome-btns">
+          <button id="welcome-cmd">Nueva CMD</button>
+          <button id="welcome-ps">Nueva PowerShell</button>
+        </div>
+      </div>
+    </div>
+
+    <div id="help-overlay" class="hidden">
+      <div class="help-card">
+        <h2>Atajos de teclado</h2>
+        <table>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>T</kbd></td><td>Nueva terminal CMD</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>T</kbd></td><td>Nueva terminal PowerShell</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>W</kbd></td><td>Cerrar terminal actual</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Tab</kbd> / <kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>Tab</kbd></td><td>Siguiente / anterior terminal</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>1</kbd>…<kbd>9</kbd></td><td>Ir a la pestaña N</td></tr>
+          <tr><td><kbd>F2</kbd> o doble click</td><td>Renombrar terminal</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>E</kbd> / <kbd>O</kbd></td><td>Agregar panel (hasta 8, columnas / filas)</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>W</kbd></td><td>Cerrar el panel enfocado (la terminal sigue abierta)</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>Shift</kbd>+<kbd>C</kbd> / <kbd>V</kbd></td><td>Copiar / pegar</td></tr>
+          <tr><td><kbd>Ctrl</kbd>+<kbd>C</kbd> (con selección)</td><td>Copiar selección</td></tr>
+          <tr><td>Click derecho</td><td>Copiar selección o pegar</td></tr>
+        </table>
+        <p class="help-close-hint">Pulsa <kbd>Esc</kbd> o haz click fuera para cerrar</p>
+      </div>
+    </div>
+  </div>
+
+  <script src="../node_modules/@xterm/xterm/lib/xterm.js"></script>
+  <script src="../node_modules/@xterm/addon-fit/lib/addon-fit.js"></script>
+  <script src="../node_modules/@xterm/addon-web-links/lib/addon-web-links.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
