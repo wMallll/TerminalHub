@@ -106,7 +106,9 @@ Si hay `startup.json`, esas son las pestañas al iniciar. Si no, la app restaura
 
 ## Actualizaciones
 
-Al iniciar, TerminalHub consulta la última versión publicada en este repositorio (API pública de GitHub, sin telemetría ni datos personales). Si hay una versión más nueva que la instalada, aparece un aviso dentro de la app con un botón para ir a la descarga. Como la app es portable, actualizar es simplemente descargar el zip nuevo y reemplazar la carpeta.
+Al iniciar, TerminalHub consulta la última versión publicada en este repositorio (API pública de GitHub, sin telemetría ni datos personales). Si hay una versión más nueva, aparece un aviso dentro de la app con el botón **Actualizar**: la app descarga el zip mostrando el progreso, lo instala sola y se reinicia ya actualizada — sin pasos manuales. Tu configuración (pestañas, títulos, tema y `startup.json`) se conserva.
+
+Si la instalación automática no fuera posible (por permisos o falta de conexión), el aviso ofrece la descarga manual: bajás el zip y reemplazás la carpeta.
 
 ## Compilar desde el código fuente
 
