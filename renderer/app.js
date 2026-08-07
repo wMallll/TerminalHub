@@ -87,7 +87,7 @@ function makePane() {
   const pane = { el, titleEl, sessionId: null };
   el.addEventListener('mousedown', () => {
     const i = panes.indexOf(pane);
-    if (i >= 0) {
+    if (i >= 0 && i !== focusedPane) {
       setFocusedPane(i);
       renderTabs();
     }
