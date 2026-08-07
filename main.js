@@ -197,15 +197,18 @@ async function installUpdate() {
     fs.writeFileSync(bat, [
       '@echo off',
       'title TerminalHub - actualizacion',
-      'echo Esperando a que TerminalHub se cierre...',
+      'echo Cerrando TerminalHub...',
       'set tries=0',
       ':wait',
-      'timeout /t 1 /nobreak >nul',
+      'ping -n 2 127.0.0.1 >nul',
       'set /a tries+=1',
-      'if %tries% GEQ 60 goto copy',
-      'tasklist /FI "IMAGENAME eq TerminalHub.exe" 2>nul | find /I "TerminalHub.exe" >nul && goto wait',
-      'timeout /t 2 /nobreak >nul',
-      ':copy',
+      'tasklist /FI "IMAGENAME eq TerminalHub.exe" /NH 2>nul | findstr /I "TerminalHub.exe" >nul',
+      'if errorlevel 1 goto ready',
+      'if %tries% LSS 15 goto wait',
+      'echo Forzando el cierre de TerminalHub...',
+      'taskkill /F /IM TerminalHub.exe /T >nul 2>&1',
+      ':ready',
+      'ping -n 3 127.0.0.1 >nul',
       'echo Instalando la actualizacion...',
       'robocopy "' + src + '" "' + appDir + '" /e /r:20 /w:1 >"' + logPath + '" 2>&1',
       'echo Listo. Abriendo TerminalHub...',
@@ -216,9 +219,11 @@ async function installUpdate() {
     ].join('\r\n'), 'utf8');
 
     send('update-progress', { phase: 'install' });
+    for (const [, p] of sessions) { try { p.kill(); } catch (_) {} }
+    sessions.clear();
     const child = spawn('cmd.exe', ['/c', bat], { detached: true, stdio: 'ignore', windowsHide: true });
     child.unref();
-    setTimeout(() => app.quit(), 500);
+    setTimeout(() => { try { app.exit(0); } catch (_) { app.quit(); } }, 400);
   } catch (err) {
     send('update-error', { message: String((err && err.message) || err) });
   }
@@ -234,7 +239,7 @@ app.whenReady().then(() => {
 app.on('window-all-closed', () => {
   for (const [, p] of sessions) { try { p.kill(); } catch (_) {} }
   sessions.clear();
-  app.quit();
+  app.exit(0);
 });
 
 ipcMain.handle('pty-create', (_e, { id, shellKind, cols, rows, cwd, command }) => {
