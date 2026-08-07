@@ -331,11 +331,25 @@ html, body {
 .term-holder {
   position: absolute;
   inset: 0;
-  padding: 6px 2px 4px 8px;
+  padding: 6px 0 4px 8px;
   display: none;
 }
 .term-holder.visible { display: block; }
 .term-holder .xterm { height: 100%; }
+
+.term-holder .xterm .xterm-viewport::-webkit-scrollbar { width: 12px; }
+.term-holder .xterm .xterm-viewport::-webkit-scrollbar-track { background: transparent; }
+.term-holder .xterm .xterm-viewport::-webkit-scrollbar-thumb {
+  background: var(--border);
+  border-radius: 6px;
+  border: 3px solid transparent;
+  background-clip: content-box;
+  min-height: 40px;
+}
+.term-holder .xterm .xterm-viewport::-webkit-scrollbar-thumb:hover {
+  background: var(--fg-dim);
+  background-clip: content-box;
+}
 
 #welcome {
   position: absolute;
