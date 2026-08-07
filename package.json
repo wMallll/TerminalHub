@@ -1,7 +1,7 @@
 {
   "name": "terminalhub",
   "productName": "TerminalHub",
-  "version": "1.5.1",
+  "version": "1.5.2",
   "description": "Gestor de terminales con pestañas para Windows (CMD / PowerShell)",
   "author": "wMal",
   "license": "MIT",
