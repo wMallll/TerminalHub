@@ -160,6 +160,7 @@ function showInPane(id, paneIdx) {
   setFocusedPane(paneIdx);
   requestAnimationFrame(() => {
     try { s.fit.fit(); } catch (_) {}
+    if (s.follow) { try { s.term.scrollToBottom(); } catch (_) {} }
     s.term.focus();
   });
   renderTabs();
@@ -293,7 +294,11 @@ function switchGroup(idx) {
     for (const p of panes) {
       const s = p.sessionId ? sessions.get(p.sessionId) : null;
       if (s) {
-        try { s.fit.fit(); s.term.refresh(0, s.term.rows - 1); } catch (_) {}
+        try {
+          s.fit.fit();
+          s.term.refresh(0, s.term.rows - 1);
+          if (s.follow) s.term.scrollToBottom();
+        } catch (_) {}
       }
     }
   });
@@ -341,13 +346,18 @@ async function createTerminal(shell, opts = {}) {
     id, term, fit, el, shell,
     title: opts.title || defaultTitle(shell),
     custom: !!opts.custom,
-    closed: false
+    closed: false,
+    follow: true
   };
   sessions.set(id, s);
   order.push(id);
 
   term.onData((data) => window.termAPI.write(id, data));
   term.onResize(({ cols, rows }) => window.termAPI.resize(id, cols, rows));
+  term.onScroll(() => {
+    const b = term.buffer.active;
+    s.follow = b.viewportY >= b.baseY;
+  });
   term.onTitleChange((t) => {
     if (!s.custom && t && t.trim()) {
       s.title = t.trim();
@@ -784,7 +794,11 @@ window.termAPI.onUpdateError(() => {
 
 window.termAPI.onData(({ id, data }) => {
   const s = sessions.get(id);
-  if (s && !s.closed) s.term.write(data);
+  if (s && !s.closed) {
+    s.term.write(data, () => {
+      if (s.follow) s.term.scrollToBottom();
+    });
+  }
 });
 
 window.termAPI.onExit(({ id }) => {
